@@ -402,6 +402,7 @@ static struct ibv_cq *create_cq(struct ibv_context *context,
 		goto err_db;
 
 	cq->creation_flags = cmd_e.ibv_cmd.flags;
+	cq->wc_flags = cq_attr->wc_flags;
 	cq->cqn = resp.cqn;
 
 	return &cq->ibv_cq;

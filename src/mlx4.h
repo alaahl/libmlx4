@@ -213,6 +213,7 @@ struct mlx4_pd {
 
 struct mlx4_cq {
 	struct ibv_cq			ibv_cq;
+	uint64_t			wc_flags;
 	struct mlx4_buf			buf;
 	struct mlx4_buf			resize_buf;
 	pthread_spinlock_t		lock;
@@ -412,6 +413,9 @@ int mlx4_alloc_cq_buf(struct mlx4_device *dev, struct mlx4_buf *buf, int nent,
 int mlx4_resize_cq(struct ibv_cq *cq, int cqe);
 int mlx4_destroy_cq(struct ibv_cq *cq);
 int mlx4_poll_cq(struct ibv_cq *cq, int ne, struct ibv_wc *wc);
+int mlx4_poll_cq_ex(struct ibv_cq *ibcq,
+		    struct ibv_wc_ex *wc,
+		    struct ibv_poll_cq_ex_attr *attr);
 int mlx4_arm_cq(struct ibv_cq *cq, int solicited);
 void mlx4_cq_event(struct ibv_cq *cq);
 void __mlx4_cq_clean(struct mlx4_cq *cq, uint32_t qpn, struct mlx4_srq *srq);
