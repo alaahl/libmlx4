@@ -202,6 +202,21 @@ struct ibv_mr *mlx4_reg_mr(struct ibv_pd *pd, void *addr, size_t length,
 	return mr;
 }
 
+int mlx4_rereg_mr(struct ibv_mr *mr,
+		  int flags,
+		  struct ibv_pd *pd, void *addr,
+		  size_t length, uint64_t access)
+{
+	struct ibv_rereg_mr cmd;
+	struct ibv_rereg_mr_resp resp;
+
+	return ibv_cmd_rereg_mr(mr, flags, addr, length,
+				(uintptr_t) addr,
+				access, pd,
+				&cmd, sizeof(cmd),
+				&resp, sizeof(resp));
+}
+
 int mlx4_dereg_mr(struct ibv_mr *mr)
 {
 	int ret;
