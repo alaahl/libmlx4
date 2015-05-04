@@ -45,6 +45,14 @@
 #include "mlx4-abi.h"
 #include "wqe.h"
 
+static void parse_raw_fw_ver(uint64_t raw_fw_ver, unsigned *major,
+			     unsigned *minor, unsigned *sub_minor)
+{
+	*major     = (raw_fw_ver >> 32) & 0xffff;
+	*minor     = (raw_fw_ver >> 16) & 0xffff;
+	*sub_minor = raw_fw_ver & 0xffff;
+}
+
 int mlx4_query_device(struct ibv_context *context, struct ibv_device_attr *attr)
 {
 	struct ibv_query_device cmd;
@@ -56,14 +64,54 @@ int mlx4_query_device(struct ibv_context *context, struct ibv_device_attr *attr)
 	if (ret)
 		return ret;
 
-	major     = (raw_fw_ver >> 32) & 0xffff;
-	minor     = (raw_fw_ver >> 16) & 0xffff;
-	sub_minor = raw_fw_ver & 0xffff;
+	parse_raw_fw_ver(raw_fw_ver, &major, &minor, &sub_minor);
 
 	snprintf(attr->fw_ver, sizeof attr->fw_ver,
 		 "%d.%d.%03d", major, minor, sub_minor);
 
 	return 0;
+}
+
+int _mlx4_query_device_ex(struct ibv_context *context,
+			  const struct ibv_query_device_ex_input *input,
+			  struct ibv_device_attr_ex *attr, size_t attr_size,
+			  uint32_t *comp_mask)
+{
+	struct ibv_query_device_ex cmd;
+	struct query_device_ex_resp resp;
+	uint64_t raw_fw_ver;
+	unsigned major, minor, sub_minor;
+	int ret;
+
+	memset(&resp, 0, sizeof(resp));
+
+	ret = ibv_cmd_query_device_ex(context, input, attr, attr_size,
+				      &raw_fw_ver, &cmd, sizeof(cmd),
+				      sizeof(cmd), &resp.core,
+				      sizeof(resp.core), sizeof(resp));
+	if (ret)
+		return ret;
+
+	parse_raw_fw_ver(raw_fw_ver, &major, &minor, &sub_minor);
+
+	snprintf(attr->orig_attr.fw_ver, sizeof(attr->orig_attr.fw_ver),
+		 "%d.%d.%03d", major, minor, sub_minor);
+
+	if (resp.comp_mask & QUERY_DEVICE_RESP_MASK_TIMESTAMP)
+		to_mctx(context)->core_clock_offset =
+			resp.hca_core_clock_offset;
+
+	if (comp_mask)
+		*comp_mask = resp.comp_mask;
+
+	return 0;
+}
+
+int mlx4_query_device_ex(struct ibv_context *context,
+			 const struct ibv_query_device_ex_input *input,
+			 struct ibv_device_attr_ex *attr, size_t attr_size)
+{
+	return _mlx4_query_device_ex(context, input, attr, attr_size, NULL);
 }
 
 int mlx4_query_port(struct ibv_context *context, uint8_t port,

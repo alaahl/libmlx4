@@ -111,4 +111,17 @@ struct mlx4_create_qp {
 	__u8				reserved[5];
 };
 
+enum query_device_resp_mask {
+	QUERY_DEVICE_RESP_MASK_TIMESTAMP = 1UL << 0,
+};
+
+struct query_device_ex_resp {
+	struct ibv_query_device_resp_ex core;
+	struct {
+		uint32_t comp_mask;
+		uint32_t response_length;
+		uint64_t hca_core_clock_offset;
+	};
+};
+
 #endif /* MLX4_ABI_H */
