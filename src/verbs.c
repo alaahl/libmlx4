@@ -301,7 +301,8 @@ enum {
 };
 
 enum {
-	CREATE_CQ_SUPPORTED_WC_FLAGS = IBV_WC_STANDARD_FLAGS
+	CREATE_CQ_SUPPORTED_WC_FLAGS = IBV_WC_STANDARD_FLAGS	|
+				       IBV_WC_EX_WITH_COMPLETION_TIMESTAMP
 };
 
 static struct ibv_cq *create_cq(struct ibv_context *context,
