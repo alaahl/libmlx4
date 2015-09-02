@@ -88,6 +88,17 @@
 
 #define PFX		"mlx4: "
 
+#ifdef HAVE_ALWAYS_INLINE
+#define ALWAYS_INLINE __attribute((always_inline))
+#else
+#define ALWAYS_INLINE
+#endif
+
+enum {
+	CREATE_CQ_SUPPORTED_WC_FLAGS = IBV_WC_STANDARD_FLAGS	|
+				       IBV_WC_EX_WITH_COMPLETION_TIMESTAMP
+};
+
 enum {
 	MLX4_STAT_RATE_OFFSET		= 5
 };
@@ -216,7 +227,7 @@ struct mlx4_cq {
 	struct ibv_cq			ibv_cq;
 	uint64_t			wc_flags;
 	int (*mlx4_poll_one)(struct mlx4_cq *cq, struct mlx4_qp **cur_qp,
-			     struct ibv_wc_ex **wc_ex);
+			     struct ibv_wc_ex **wc_ex, uint64_t wc_flags);
 	struct mlx4_buf			buf;
 	struct mlx4_buf			resize_buf;
 	pthread_spinlock_t		lock;
@@ -438,7 +449,12 @@ int mlx4_poll_cq_ex(struct ibv_cq *ibcq,
 		    struct ibv_poll_cq_ex_attr *attr);
 int mlx4_poll_one_ex(struct mlx4_cq *cq,
 		     struct mlx4_qp **cur_qp,
-		     struct ibv_wc_ex **pwc_ex);
+		     struct ibv_wc_ex **pwc_ex,
+		     uint64_t wc_flags);
+int (*mlx4_get_poll_one_fn(uint64_t wc_flags))(struct mlx4_cq *cq,
+					       struct mlx4_qp **cur_qp,
+					       struct ibv_wc_ex **pwc_ex,
+					       uint64_t wc_flags);
 int mlx4_arm_cq(struct ibv_cq *cq, int solicited);
 void mlx4_cq_event(struct ibv_cq *cq);
 void __mlx4_cq_clean(struct mlx4_cq *cq, uint32_t qpn, struct mlx4_srq *srq);

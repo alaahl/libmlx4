@@ -345,11 +345,6 @@ enum {
 	CREATE_CQ_SUPPORTED_FLAGS = IBV_CREATE_CQ_ATTR_COMPLETION_TIMESTAMP
 };
 
-enum {
-	CREATE_CQ_SUPPORTED_WC_FLAGS = IBV_WC_STANDARD_FLAGS	|
-				       IBV_WC_EX_WITH_COMPLETION_TIMESTAMP
-};
-
 static struct ibv_cq *create_cq(struct ibv_context *context,
 				struct ibv_cq_init_attr_ex *cq_attr,
 				enum cmd_type cmd_type)
@@ -450,6 +445,11 @@ static struct ibv_cq *create_cq(struct ibv_context *context,
 	cq->mlx4_poll_one = mlx4_poll_one_ex;
 	cq->creation_flags = cmd_e.ibv_cmd.flags;
 	cq->wc_flags = cq_attr->wc_flags;
+
+	cq->mlx4_poll_one = mlx4_get_poll_one_fn(cq->wc_flags);
+	if (!cq->mlx4_poll_one)
+		cq->mlx4_poll_one = mlx4_poll_one_ex;
+
 	cq->cqn = resp.cqn;
 
 	return &cq->ibv_cq;

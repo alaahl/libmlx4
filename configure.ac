@@ -45,6 +45,23 @@ AC_CHECK_MEMBER([struct verbs_context.ibv_create_flow], [],
     [AC_MSG_ERROR([libmlx4 requires libibverbs >= 1.2.0])],
     [[#include <infiniband/verbs.h>]])
 
+AC_MSG_CHECKING("always inline")
+CFLAGS_BAK="$CFLAGS"
+CFLAGS="$CFLAGS -Werror"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+	static inline int f(void)
+		__attribute((always_inline));
+	static inline int f(void)
+	{
+		return 1;
+	}
+]],[[
+		int a = f();
+		a = a;
+]])], [AC_MSG_RESULT([yes]) AC_DEFINE([HAVE_ALWAYS_INLINE], [1], [Define if __attribute((always_inline)).])],
+[AC_MSG_RESULT([no])])
+CFLAGS="$CFLAGS_BAK"
+
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_CHECK_SIZEOF(long)
