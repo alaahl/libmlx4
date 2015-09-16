@@ -447,6 +447,7 @@ static struct ibv_cq *create_cq(struct ibv_context *context,
 	if (ret)
 		goto err_db;
 
+	cq->mlx4_poll_one = mlx4_poll_one_ex;
 	cq->creation_flags = cmd_e.ibv_cmd.flags;
 	cq->wc_flags = cq_attr->wc_flags;
 	cq->cqn = resp.cqn;

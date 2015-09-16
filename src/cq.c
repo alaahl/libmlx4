@@ -601,7 +601,8 @@ int mlx4_poll_cq_ex(struct ibv_cq *ibcq,
 	int npolled;
 	int err = CQ_OK;
 	unsigned int ne = attr->max_entries;
-	uint64_t wc_flags = cq->wc_flags;
+	int (*poll_fn)(struct mlx4_cq *cq, struct mlx4_qp **cur_qp,
+		       struct ibv_wc_ex **wc_ex) = cq->mlx4_poll_one;
 
 	if (attr->comp_mask)
 		return -EINVAL;
@@ -609,7 +610,7 @@ int mlx4_poll_cq_ex(struct ibv_cq *ibcq,
 	pthread_spin_lock(&cq->lock);
 
 	for (npolled = 0; npolled < ne; ++npolled) {
-		err = _mlx4_poll_one_ex(cq, &qp, &wc, wc_flags);
+		err = poll_fn(cq, &qp, &wc);
 		if (err != CQ_OK)
 			break;
 	}
